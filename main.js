@@ -68,7 +68,16 @@ var Module = function() {
   var retval = Function();
   return retval;
 };
-
+var Expression = function() {
+    return Node();
+}
+var BinaryExpression = function(op, left, right) {
+    var retval = Expression();
+    retval.op = op;
+    retval.left = left;
+    retval.right = right;
+    return retval;
+};
 
 var expectIdentifier = function(code) {
   var retval = '';
@@ -96,13 +105,27 @@ var readWhitespace = function(code) {
 };
 var error = function(code,msg) {
     throw msg;
-}
+};
+
+
+
 //TODO: Should we call this
-//Shannanigans
+//Shananigans
+
+
+
+var parseExpression = function(code) {
+    readWhitespace(code);
+    if(isDigit(code.get())) {
+        var retval = expectNumber(code);
+        return retval;
+    }
+};
+
+//Entry-point parser function
 var parse = function(code) {
   code = StringPointer(code);
   var retval = Module();
-  
   while(code.get() != null) {
         readWhitespace(code);
         if(isAlpha(code.get())) {
@@ -111,10 +134,28 @@ var parse = function(code) {
             if(isAlpha(code.get())) {
                 var name = expectIdentifier(code);
                 retval.declarations[name] = Declaration(name,id);
+                readWhitespace(code);
+                switch(code.get()) {
+                    case ';':
+                        break;
+                    case '=':
+                        code.next();
+                        retval.expressions.push(BinaryExpression('=',retval.declarations[name],parseExpression(code)));
+                        if(code.get() != ';') {
+                            error(code,'Expected ;, got '+code.get());
+                        }
+                        code.next();
+                        break;
+                    default:
+                        error(code,'Expected ;');
+                }
+                code.next();
                 continue;
             }
       }
-      
+      if(code.get() == null) {
+          error(code,'Unexpected EOF (end-of-file)');
+      }
       error(code,'Unexpected token: '+code.get());
       
   }
@@ -123,15 +164,48 @@ var parse = function(code) {
 };
 
 
+
+
+//END PARSER
+
+
+//BEGIN COMPILER
+
+var BinaryWriter = function() {
+   var buffer = new Buffer(0);
+   return {
+       writeInt32:function(value) {
+           var b = new Buffer(4);
+           b.writeInt32LE(value,0);
+           buffer = Buffer.concat([buffer,b],buffer.length+b.length);
+       },
+       writeString:function(value) {
+           var txt = new Buffer(value);
+           buffer = Buffer.concat([buffer,txt],buffer.length+txt.length);
+       },
+       toBinary:function() {
+           return buffer;
+       }
+   };
+};
+
+
+var compile = function(tree) {
+    //Emit Main function
+    
+};
+//END COMPILER
+
 var promptUser = function() {
+    
     rl.question('> ',function(code){
-        console.log(parse(code));
+        var tree = parse(code);
+        console.log(tree);
         promptUser();
     });
 };
-
+Number.prototype.__Number = true;
 promptUser();
-//END PARSER
 
 
 
