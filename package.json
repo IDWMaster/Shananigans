@@ -1,0 +1,16 @@
+{
+  "name": "vmlang",
+  "version": "1.0.0",
+  "description": "VMLang parser and runtime",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "parser",
+    "compiler",
+    "vmlang"
+  ],
+  "author": "Brian Bosak <brielcccc@gmail.com> (https://github.com/IDWMaster)",
+  "license": "GPL-3.0"
+}
