@@ -54,6 +54,9 @@ var Declaration = function(name,type) {
   var retval = Node();
   retval.name = name;
   retval.type = type;
+  retval.toString = function() {
+      return retval.type+' '+retval.name;
+  };
   return retval;
 };
 
@@ -61,6 +64,16 @@ var Function = function() {
     var retval = Node();
     retval.declarations = new Object();
     retval.expressions = new Array();
+    retval.toString = function() {
+        var rval = '';
+        for(var i in retval.declarations) {
+            rval+=retval.declarations[i].toString()+';\n';
+        }
+        for(var i = 0;i<retval.expressions.length;i++) {
+            rval+=retval.expressions[i].toString()+';\n';
+        }
+        return rval;
+    };
     return retval;
 };
 
@@ -76,12 +89,19 @@ var BinaryExpression = function(op, left, right) {
     retval.op = op;
     retval.left = left;
     retval.right = right;
+    retval.toString = function() {
+        var rval = retval.left.toString()+' '+retval.op.toString()+' '+retval.right.toString();
+        return rval;
+    };
     return retval;
 };
 
 var Subexpression = function(subexp) {
   var retval = Node();
   retval.subexp = subexp;
+  retval.toString = function() {
+    return '('+retval.subexp.toString()+')';
+  };
   return retval;
 };
 
@@ -173,11 +193,10 @@ var parse = function(code) {
                         break;
                     case '=':
                         code.next();
-                        retval.expressions.push(BinaryExpression('=',retval.declarations[name],parseExpression(code)));
+                        retval.expressions.push(BinaryExpression('=',name,parseExpression(code)));
                         if(code.get() != ';') {
                             error(code,'Expected ;, got '+code.get());
                         }
-                        code.next();
                         break;
                     default:
                         error(code,'Expected ;');
@@ -233,6 +252,7 @@ var promptUser = function() {
     
     rl.question('> ',function(code){
         var tree = parse(code);
+        console.log(tree.toString());
         console.log(JSON.stringify(tree));
         promptUser();
     });
