@@ -79,6 +79,13 @@ var BinaryExpression = function(op, left, right) {
     return retval;
 };
 
+var Subexpression = function(subexp) {
+  var retval = Node();
+  retval.subexp = subexp;
+  return retval;
+};
+
+
 var expectIdentifier = function(code) {
   var retval = '';
     while(isalnum(code.get())) {
@@ -118,8 +125,34 @@ var parseExpression = function(code) {
     readWhitespace(code);
     if(isDigit(code.get())) {
         var retval = expectNumber(code);
+        readWhitespace(code);
+        switch(code.get()) {
+            case '+':
+            case '-':
+            case '*':
+            case '/':
+            case '%':
+            {
+                var op = code.get();
+                code.next();
+                return BinaryExpression(op,retval,parseExpression(code));
+            }
+            break;
+        }
         return retval;
+    }else {
+        if(code.get() == '(') {
+            code.next();
+            var retval = Subexpression(parseExpression(code));
+            readWhitespace(code);
+            if(code.get() != ')') {
+                error(code,'Expected ).');
+            }
+            code.next();
+            return retval;
+        }
     }
+    
 };
 
 //Entry-point parser function
@@ -200,7 +233,7 @@ var promptUser = function() {
     
     rl.question('> ',function(code){
         var tree = parse(code);
-        console.log(tree);
+        console.log(JSON.stringify(tree));
         promptUser();
     });
 };
