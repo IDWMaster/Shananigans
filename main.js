@@ -203,7 +203,18 @@ var parse = function(code) {
                 }
                 code.next();
                 continue;
-            }
+            }else {
+          switch(code.get()) {
+              case '=':
+                  code.next();
+                  retval.expressions.push(BinaryExpression('=',name,parseExpression(code)));
+                  if(code.get() != ';') {
+                            error(code,'Expected ;, got '+code.get());
+                  }
+                  code.next();
+                  continue;
+          }
+      }
       }
       if(code.get() == null) {
           error(code,'Unexpected EOF (end-of-file)');
